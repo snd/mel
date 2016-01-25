@@ -42,8 +42,13 @@ macro_rules! test_mel {
         let mel: $float = 100.;
         assert_approx_eq_eps!(
             mel, mel_from_hertz(hertz_from_mel(mel)), 0.0001);
+        let mel: $float = 3000.;
+        assert_approx_eq_eps!(
+            mel, mel_from_hertz(hertz_from_mel(mel)), 0.0001);
 
         let hertz: $float = 0.;
+        assert_approx_eq!(hertz, hertz_from_mel(mel_from_hertz(hertz)));
+        let hertz: $float = 1000.;
         assert_approx_eq!(hertz, hertz_from_mel(mel_from_hertz(hertz)));
         let hertz: $float = 44100. / 2.;
         assert_approx_eq!(hertz, hertz_from_mel(mel_from_hertz(hertz)));
