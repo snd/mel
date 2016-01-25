@@ -21,6 +21,7 @@ pub fn magic_number_2<T>() -> T
     <T as std::convert::From<f32>>::from(2595.)
 }
 
+#[inline]
 pub fn hertz_from_mel<T>(mel: T) -> T
     where T: std::convert::From<f32> + Float + Div<T, Output=T> + Sub<T, Output=T>
 {
@@ -30,6 +31,7 @@ pub fn hertz_from_mel<T>(mel: T) -> T
          <T as std::convert::From<f32>>::from(1.))
 }
 
+#[inline]
 pub fn mel_from_hertz<T>(hertz: T) -> T
     where T: std::convert::From<f32> + Float + Mul<T, Output=T> + Add<T, Output=T>
 {
