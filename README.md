@@ -18,7 +18,7 @@ and more meaningful representation.
 - [x] `mel_from_hertz`
 - [x] `hertz_from_mel`
 - [ ] generate triangular windows that can map a frequency vector into a mel vector
-- [ ] fill matrix 
+- [ ] fill matrix so it can be multiplied with a frequency vector to transform it into mel scale
 
 <!--
 to use add `mel = "*"`
