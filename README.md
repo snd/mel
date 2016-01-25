@@ -19,6 +19,7 @@ and more meaningful representation.
 - [x] `hertz_from_mel`
 - [ ] generate triangular windows that can map a frequency vector into a mel vector
 - [ ] fill matrix that can be multiplied with a frequency vector to transform it into mel scale
+- [ ] use DCT to compute [MFCCs](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum) (maybe)
 
 <!--
 to use add `mel = "*"`
