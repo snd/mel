@@ -7,37 +7,27 @@ use nalgebra::ApproxEq;
 extern crate num;
 use num::{Float};
 
-#[inline]
-pub fn magic_number_1<T>() -> T
-    where T: std::convert::From<f32>
-{
-    <T as std::convert::From<f32>>::from(700.)
-}
-
-#[inline]
-pub fn magic_number_2<T>() -> T
-    where T: std::convert::From<f32>
-{
-    <T as std::convert::From<f32>>::from(2595.)
+macro_rules! from {
+    ($expr:expr, $src:ty, $dst:ty) => {
+        <$dst as std::convert::From<$src>>::from($expr)
+    }
 }
 
 #[inline]
 pub fn hertz_from_mel<T>(mel: T) -> T
     where T: std::convert::From<f32> + Float + Div<T, Output=T> + Sub<T, Output=T>
 {
-    magic_number_1::<T>() *
-        (<T as std::convert::From<f32>>::from(10.)
-         .powf(mel / magic_number_2::<T>()) -
-         <T as std::convert::From<f32>>::from(1.))
+    from!(700., f32, T) *
+        (from!(10., f32, T).powf(
+            mel / from!(2595., f32, T)) - from!(1., f32, T))
 }
 
 #[inline]
 pub fn mel_from_hertz<T>(hertz: T) -> T
     where T: std::convert::From<f32> + Float + Mul<T, Output=T> + Add<T, Output=T>
 {
-    magic_number_2::<T>() *
-        (<T as std::convert::From<f32>>::from(1.) +
-         hertz / magic_number_1::<T>()).log10()
+    from!(2595., f32, T) *
+        (from!(1., f32, T) + hertz / from!(700., f32, T)).log10()
 }
 
 macro_rules! test_mel {
