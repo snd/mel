@@ -1,15 +1,18 @@
 [package]
 authors = ["Maximilian Krüger <kruemaxi@gmail.com>"]
-name = "mel"
-version = "0.1.0"
 description = "convert scalars and vectors from hertz to mel scale"
 documentation = "https://snd.github.io/mel/mel/index.html"
 homepage = "https://github.com/snd/mel"
-repository = "https://github.com/snd/mel.git"
-readme = "README.md"
 keywords = ["mel"]
 license = "MIT OR Apache-2.0"
+name = "mel"
+readme = "README.md"
+repository = "https://github.com/snd/mel.git"
+version = "0.1.0"
 
 [dependencies]
-num = "0.1.30"
+apodize = "0.1.2"
+hertz = "0.2.0"
+itertools = "0.4.7"
 nalgebra = "0.5.1"
+num = "0.1.30"
