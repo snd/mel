@@ -9,14 +9,17 @@ fn main() {
     let power_spectrum_size = window_size / 2;
     let filter_count = 100;
 
+    let mut calls: usize = 0;
+
     for (row, col, value) in mel::enumerate_mel_scaling_matrix(
         sample_rate,
         window_size,
         power_spectrum_size,
         filter_count,
     ) {
-
+        calls += 1;
     }
+    assert_eq!(calls, power_spectrum_size * filter_count);
 }
 ```
 */
@@ -97,6 +100,8 @@ pub struct MelScalingMatrixEnumerator<WindowIter> {
     mel_from_hertz: fn(f64) -> f64,
     hertz_from_mel: fn(f64) -> f64,
 
+    max_hertz: f64,
+
     window_function: fn(usize) -> WindowIter,
 
     // state
@@ -118,16 +123,16 @@ impl<WindowIter> MelScalingMatrixEnumerator<WindowIter>
 {
     #[inline]
     pub fn is_done(&self) -> bool {
-        self.is_at_end_of_row() && self.is_at_end_of_col()
+        self.is_last_row() && self.is_last_col()
     }
 
     #[inline]
-    pub fn is_at_end_of_col(&self) -> bool {
+    pub fn is_last_row(&self) -> bool {
         self.output_size <= self.row_index
     }
 
     #[inline]
-    pub fn is_at_end_of_row(&self) -> bool {
+    pub fn is_last_col(&self) -> bool {
         self.input_size <= self.col_index
     }
 
@@ -153,43 +158,52 @@ impl<WindowIter> Iterator for MelScalingMatrixEnumerator<WindowIter>
         if self.is_done() {
             return None;
         }
-        if self.is_at_end_of_row() {
+
+        // start a new row
+        if self.is_last_col() {
             self.col_index = 0;
             self.row_index += 1;
-            // TODO new window iterator...
-            return Some((self.row_index, self.col_index, 0.));
+
+            let start_mel = self.start_mels_iter.next().unwrap();
+            let end_mel = self.end_mels_iter.next().unwrap();
+
+            let hertz_from_mel = self.hertz_from_mel;
+            let start_hertz = hertz_from_mel(start_mel);
+            let end_hertz = hertz_from_mel(end_mel);
+
+            // TODO maybe round or floor or ceil here
+            self.window_start = usize_from_f64!(
+                start_hertz /
+                self.max_hertz *
+                f64_from_usize!(self.output_size));
+
+            let window_end = usize_from_f64!(
+                end_hertz /
+                self.max_hertz *
+                f64_from_usize!(self.output_size));
+
+            self.window_size = window_end - self.window_start;
+
+            let window_function = self.window_function;
+            self.window_iter = window_function(self.window_size);
         }
 
         let col = self.col_index;
 
-        self.col_index += 1;
-        Some((self.row_index, col, 0.))
-    }
+        let value = if col < self.window_start {
+            match self.window_iter.next() {
+                Some(value) => {
+                    value / f64_from_usize!(self.window_size)
+                },
+                None => 0.
+            }
+        } else {
+            0.
+        };
 
-        // // iterate row in outer loop (slow)
-        // // iterate col in inner loop (fast)
-        // // fill matrix with zeros
-        // for i_row in 0..output_size {
-        //     for i_col in 0..input_size {
-        //         matrix[(i_row, i_col)] = T::zero();
-        //     }
-        // }
-        //
-        //
-        // for (i_mel, (start_mel, end_mel)) in start_mels_iter
-        //     .zip(end_mels_iter)
-        //     .enumerate()
-        // {
-        //     let start_hertz = hertz_from_mel(start_mel) as usize;
-        //     let end_hertz = hertz_from_mel(end_mel) as usize;
-        //     assert!(start_hertz < end_hertz);
-        //     let window_size = end_hertz - start_hertz;
-        //     assert!(0 < window_size);
-        //     let window_iter = window_function(window_size);
-        //     for (ifreq, factor) in window_iter.enumerate() {
-        //         matrix[(imel, ifreq)] = factor / window_size;
-        //     }
-        // }
+        self.col_index += 1;
+        Some((self.row_index, col, value))
+    }
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -264,6 +278,7 @@ pub fn enumerate_mel_scaling_matrix_base<WindowIter>(
         window_function: window_function,
         hertz_from_mel: hertz_from_mel,
         mel_from_hertz: mel_from_hertz,
+        max_hertz: max_hertz,
 
         // state
         row_index: 0,
