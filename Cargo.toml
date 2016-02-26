@@ -11,8 +11,8 @@ repository = "https://github.com/snd/mel.git"
 version = "0.1.0"
 
 [dependencies]
-apodize = "0.1.2"
+apodize = "0.2.0"
 hertz = "0.2.0"
-itertools = "0.4.7"
+itertools = "0.4.10"
 nalgebra = "0.5.1"
-num = "0.1.30"
+num = "0.1.31"
