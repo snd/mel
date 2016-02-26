@@ -1,6 +1,7 @@
 /*!
 ```
 extern crate hertz;
+extern crate mel;
 
 fn main() {
     let sample_rate = 44100;
@@ -8,8 +9,8 @@ fn main() {
     let power_spectrum_size = window_size / 2;
     let filter_count = 100;
 
-    for (row, col, value) in enumerate_mel_scaling_matrix(
-        sample_rate as f64,
+    for (row, col, value) in mel::enumerate_mel_scaling_matrix(
+        sample_rate,
         window_size,
         power_spectrum_size,
         filter_count,
@@ -145,10 +146,10 @@ impl<WindowIter> MelScalingMatrixEnumerator<WindowIter>
 impl<WindowIter> Iterator for MelScalingMatrixEnumerator<WindowIter>
     where WindowIter: Iterator<Item=f64>
 {
-    type Item = f64;
+    type Item = (usize, usize, f64);
 
     #[inline]
-    fn next(&mut self) -> Option<f64> {
+    fn next(&mut self) -> Option<(usize, usize, f64)> {
         if self.is_done() {
             return None;
         }
@@ -156,11 +157,13 @@ impl<WindowIter> Iterator for MelScalingMatrixEnumerator<WindowIter>
             self.col_index = 0;
             self.row_index += 1;
             // TODO new window iterator...
-            return Some(0.);
+            return Some((self.row_index, self.col_index, 0.));
         }
 
+        let col = self.col_index;
+
         self.col_index += 1;
-        Some(0.)
+        Some((self.row_index, col, 0.))
     }
 
         // // iterate row in outer loop (slow)
