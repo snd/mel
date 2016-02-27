@@ -320,6 +320,27 @@ pub fn enumerate_mel_scaling_matrix(
     )
 }
 
+#[test]
+fn test_enumerate_mel_scaling_matrix() {
+    let sample_rate = 44100;
+    let window_size = 100;
+    let power_spectrum_size = window_size / 2;
+    let filter_count = 10;
+
+    let mut data: ArrayBase<Vec<f64>, (usize, usize)> =
+        ArrayBase::zeros((filter_count, power_spectrum_size));
+
+    for (row, col, value) in enumerate_mel_scaling_matrix(
+        sample_rate,
+        window_size,
+        power_spectrum_size,
+        filter_count,
+    ) {
+        data[(row, col)] = value;
+    }
+    println!("{:?}", data);
+}
+
 // TODO test that identity matrix with
 // output_size = input_size
 // and conversion functions = identity
