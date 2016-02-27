@@ -180,14 +180,17 @@ impl<WindowIter> Iterator for MelScalingMatrixEnumerator<WindowIter>
             self.window_start = usize_from_f64!(
                 start_hertz /
                 self.max_hertz *
-                f64_from_usize!(self.output_size));
+                f64_from_usize!(self.input_size));
 
             let window_end = usize_from_f64!(
                 end_hertz /
                 self.max_hertz *
-                f64_from_usize!(self.output_size));
+                f64_from_usize!(self.input_size));
+
 
             self.window_size = window_end - self.window_start;
+
+            println!("window_start = {}, window_end = {}, window_size = {}", self.window_start, window_end, self.window_size);
 
             let window_function = self.window_function;
             self.window_iter = window_function(self.window_size);
@@ -196,14 +199,14 @@ impl<WindowIter> Iterator for MelScalingMatrixEnumerator<WindowIter>
         let col = self.col_index;
 
         let value = if col < self.window_start {
+            0.
+        } else {
             match self.window_iter.next() {
                 Some(value) => {
                     value / f64_from_usize!(self.window_size)
                 },
                 None => 0.
             }
-        } else {
-            0.
         };
 
         self.col_index += 1;
@@ -257,7 +260,7 @@ pub fn enumerate_mel_scaling_matrix_base<WindowIter>(
 
     // initially start_mels_iter == end_mels_iter
     let mut start_mels_iter = linspace(min_mel, max_mel, output_size + 1);
-    let mut end_mels_iter = linspace(max_mel, max_mel, output_size + 1);
+    let mut end_mels_iter = linspace(min_mel, max_mel, output_size + 1);
     end_mels_iter.next();
 
     let start_mel = start_mels_iter.next().unwrap();
@@ -268,12 +271,14 @@ pub fn enumerate_mel_scaling_matrix_base<WindowIter>(
 
     // TODO maybe round or floor or ceil here
     let start_index = usize_from_f64!(
-        start_hertz / max_hertz * f64_from_usize!(output_size));
+        start_hertz / max_hertz * f64_from_usize!(input_size));
 
     let end_index = usize_from_f64!(
-        end_hertz / max_hertz * f64_from_usize!(output_size));
+        end_hertz / max_hertz * f64_from_usize!(input_size));
 
     let window_size = end_index - start_index;
+
+    println!("window_start = {}, window_end = {}, window_size = {}", start_index, end_index, window_size);
 
     let window_iter = window_function(window_size);
 
