@@ -4,8 +4,8 @@ be used to
 repeatedly and very efficiently ([blas](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms))
 used to
 transform a power spectrum vector to a mel filtered vector of lower dimension:
+
 ```
-extern crate hertz;
 extern crate mel;
 
 extern crate ndarray;
