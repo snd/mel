@@ -24,15 +24,15 @@ fn main() {
 ```
 */
 
-use std::ops::{Add, Sub, Mul, Div, IndexMut, Range};
-use std::cmp::{PartialOrd};
+extern crate ndarray;
+use ndarray::ArrayBase;
 
 #[macro_use]
 extern crate nalgebra;
 use nalgebra::ApproxEq;
 
 extern crate num;
-use num::{Float, Zero, NumCast, ToPrimitive, FromPrimitive};
+use num::{Float, FromPrimitive};
 
 extern crate hertz;
 extern crate apodize;
