@@ -218,8 +218,6 @@ impl<WindowIter> Iterator for MelScalingMatrixEnumerator<WindowIter>
             self.window_size = std::cmp::max(
                 window_end - self.window_start, 1);
 
-            println!("window_start = {}, window_end = {}, window_size = {}", self.window_start, window_end, self.window_size);
-
             let window_function = self.window_function;
             self.window_iter = window_function(self.window_size);
         }
@@ -306,8 +304,6 @@ pub fn enumerate_mel_scaling_matrix_base<WindowIter>(
         end_hertz / max_hertz * f64_from_usize!(input_size)).floor());
 
     let window_size = std::cmp::max(end_index - start_index, 1);
-
-    println!("window_start = {}, window_end = {}, window_size = {}", start_index, end_index, window_size);
 
     let window_iter = window_function(window_size);
 
