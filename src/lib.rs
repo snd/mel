@@ -1,7 +1,20 @@
 /*!
+example of using mel to build up a filter matrix that can then
+be used to
+repeatedly and very efficiently ([blas](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms))
+used to
+transform a power spectrum vector to a mel filtered vector of lower dimension:
 ```
 extern crate hertz;
 extern crate mel;
+
+extern crate ndarray;
+use ndarray::ArrayBase;
+use ndarray::blas::AsBlas;
+
+extern crate rblas;
+use rblas::{Gemv, Matrix, Vector};
+use rblas::attribute::Transpose;
 
 fn main() {
     let sample_rate = 44100;
@@ -9,17 +22,32 @@ fn main() {
     let power_spectrum_size = window_size / 2;
     let filter_count = 100;
 
-    let mut calls: usize = 0;
-
-    for (row, col, value) in mel::enumerate_mel_scaling_matrix(
+    // build up the mel filter matrix
+    let mut mel_filter_matrix: ArrayBase<Vec<f64>, (usize, usize)> =
+        ArrayBase::zeros((filter_count, power_spectrum_size));
+    for (row, col, coefficient) in mel::enumerate_mel_scaling_matrix(
         sample_rate,
         window_size,
         power_spectrum_size,
         filter_count,
     ) {
-        calls += 1;
+        mel_filter_matrix[(row, col)] = coefficient;
     }
-    assert_eq!(calls, power_spectrum_size * filter_count);
+
+    let mut power_spectrum_vector: ArrayBase<Vec<f64>, usize> =
+        ArrayBase::from_elem(power_spectrum_size, 1.);
+
+    let mut mel_vector: ArrayBase<Vec<f64>, usize> =
+        ArrayBase::zeros(filter_count);
+
+    // mel_vector <- mel_filter_matrix * power_spectrum_vector
+    Gemv::gemv(
+        Transpose::NoTrans,
+        &1.,
+        &mel_filter_matrix.blas(),
+        &power_spectrum_vector.blas(),
+        &0.,
+        &mut mel_vector.blas());
 }
 ```
 */
@@ -334,13 +362,13 @@ fn test_enumerate_mel_scaling_matrix() {
     let mut data: ArrayBase<Vec<f64>, (usize, usize)> =
         ArrayBase::zeros((filter_count, power_spectrum_size));
 
-    for (row, col, value) in enumerate_mel_scaling_matrix(
+    for (row, col, coefficient) in enumerate_mel_scaling_matrix(
         sample_rate,
         window_size,
         power_spectrum_size,
         filter_count,
     ) {
-        data[(row, col)] = value;
+        data[(row, col)] = coefficient;
     }
     println!("{:?}", data);
 }
