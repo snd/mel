@@ -177,16 +177,15 @@ impl<WindowIter> Iterator for MelScalingMatrixEnumerator<WindowIter>
             let end_hertz = hertz_from_mel(end_mel);
 
             // TODO maybe round or floor or ceil here
-            self.window_start = usize_from_f64!(
+            self.window_start = usize_from_f64!((
                 start_hertz /
                 self.max_hertz *
-                f64_from_usize!(self.input_size));
+                f64_from_usize!(self.input_size)).floor());
 
-            let window_end = usize_from_f64!(
+            let window_end = usize_from_f64!((
                 end_hertz /
                 self.max_hertz *
-                f64_from_usize!(self.input_size));
-
+                f64_from_usize!(self.input_size)).floor());
 
             self.window_size = window_end - self.window_start;
 
@@ -270,11 +269,11 @@ pub fn enumerate_mel_scaling_matrix_base<WindowIter>(
     let end_hertz = hertz_from_mel(end_mel);
 
     // TODO maybe round or floor or ceil here
-    let start_index = usize_from_f64!(
-        start_hertz / max_hertz * f64_from_usize!(input_size));
+    let start_index = usize_from_f64!((
+        start_hertz / max_hertz * f64_from_usize!(input_size)).floor());
 
-    let end_index = usize_from_f64!(
-        end_hertz / max_hertz * f64_from_usize!(input_size));
+    let end_index = usize_from_f64!((
+        end_hertz / max_hertz * f64_from_usize!(input_size)).floor());
 
     let window_size = end_index - start_index;
 
