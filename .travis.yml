@@ -28,3 +28,6 @@ after_success: |
     ghp-import -n target/doc && \
     git push -qf https://${GITHUB_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
   fi
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -qq libatlas-base-dev
