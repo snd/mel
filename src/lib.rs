@@ -287,8 +287,9 @@ pub fn enumerate_mel_scaling_matrix_base<WindowIter>(
     let max_mel = mel_from_hertz(max_hertz);
 
     // initially start_mels_iter == end_mels_iter
-    let mut start_mels_iter = linspace(min_mel, max_mel, output_size + 1);
-    let mut end_mels_iter = linspace(min_mel, max_mel, output_size + 1);
+    let mut start_mels_iter = linspace(min_mel, max_mel, output_size + 2);
+    let mut end_mels_iter = linspace(min_mel, max_mel, output_size + 2);
+    end_mels_iter.next();
     end_mels_iter.next();
 
     let start_mel = start_mels_iter.next().unwrap();
