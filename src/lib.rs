@@ -123,16 +123,16 @@ impl<WindowIter> MelScalingMatrixEnumerator<WindowIter>
 {
     #[inline]
     pub fn is_done(&self) -> bool {
-        self.is_last_row() && self.is_last_col()
+        self.is_after_last_row() && self.is_after_last_col()
     }
 
     #[inline]
-    pub fn is_last_row(&self) -> bool {
+    pub fn is_after_last_row(&self) -> bool {
         self.output_size <= self.row_index
     }
 
     #[inline]
-    pub fn is_last_col(&self) -> bool {
+    pub fn is_after_last_col(&self) -> bool {
         self.input_size <= self.col_index
     }
 
@@ -159,13 +159,18 @@ impl<WindowIter> Iterator for MelScalingMatrixEnumerator<WindowIter>
             return None;
         }
 
-        // start a new row
-        if self.is_last_col() {
+        // start a new row/filter
+        if self.is_after_last_col() {
             self.col_index = 0;
             self.row_index += 1;
+            if self.is_after_last_row() {
+                return None;
+            }
 
-            let start_mel = self.start_mels_iter.next().unwrap();
-            let end_mel = self.end_mels_iter.next().unwrap();
+            let start_mel = self.start_mels_iter.next()
+                .expect("self.start_mels_iter.next()");
+            let end_mel = self.end_mels_iter.next()
+                .expect("self.end_mels_iter.next()");
 
             let hertz_from_mel = self.hertz_from_mel;
             let start_hertz = hertz_from_mel(start_mel);
@@ -250,8 +255,9 @@ pub fn enumerate_mel_scaling_matrix_base<WindowIter>(
     let min_mel = mel_from_hertz(min_hertz);
     let max_mel = mel_from_hertz(max_hertz);
 
-    let mut start_mels_iter = linspace(min_mel, max_mel, output_size);
-    let mut end_mels_iter = linspace(max_mel, max_mel, output_size);
+    // initially start_mels_iter == end_mels_iter
+    let mut start_mels_iter = linspace(min_mel, max_mel, output_size + 1);
+    let mut end_mels_iter = linspace(max_mel, max_mel, output_size + 1);
     end_mels_iter.next();
 
     let start_mel = start_mels_iter.next().unwrap();
