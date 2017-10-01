@@ -13,11 +13,9 @@ version = "0.2.1"
 [dependencies]
 apodize = "0.2.0"
 hertz = "0.2.0"
-itertools = "0.4.10"
-nalgebra = "0.5.1"
-num = "0.1.31"
-rblas = "0.0.13"
+itertools-num = "0.1.1"
+num = "0.1.40"
 
-[dependencies.ndarray]
-features = ["rblas"]
-version = "0.3.1"
+[dev-dependencies]
+approx = "0.1.1"
+nalgebra = "0.13.0"

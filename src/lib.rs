@@ -1,20 +1,15 @@
 /*!
-example of using mel to build up a filter matrix that can then
+example of using the mel create to build up a filter matrix that can then
 be used to
-repeatedly and very efficiently ([blas](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms))
-used to
-transform a power spectrum vector to a mel filtered vector of lower dimension:
+repeatedly and efficiently (in-place)
+transform a huge (2048) power spectrum vector
+to a mel filtered vector of lower dimension (100).
 
 ```
 extern crate mel;
 
-extern crate ndarray;
-use ndarray::ArrayBase;
-use ndarray::blas::AsBlas;
-
-extern crate rblas;
-use rblas::{Gemv, Matrix, Vector};
-use rblas::attribute::Transpose;
+extern crate nalgebra;
+use nalgebra::{DMatrix, DVector};
 
 fn main() {
     let sample_rate = 44100;
@@ -23,8 +18,8 @@ fn main() {
     let filter_count = 100;
 
     // build up the mel filter matrix
-    let mut mel_filter_matrix: ArrayBase<Vec<f64>, (usize, usize)> =
-        ArrayBase::zeros((filter_count, power_spectrum_size));
+    let mut mel_filter_matrix =
+        DMatrix::<f64>::zeros(filter_count, power_spectrum_size);
     for (row, col, coefficient) in mel::enumerate_mel_scaling_matrix(
         sample_rate,
         window_size,
@@ -34,30 +29,20 @@ fn main() {
         mel_filter_matrix[(row, col)] = coefficient;
     }
 
-    let mut power_spectrum_vector: ArrayBase<Vec<f64>, usize> =
-        ArrayBase::from_elem(power_spectrum_size, 1.);
+    let power_spectrum_vector =
+        DVector::<f64>::from_element(power_spectrum_size, 1.);
 
-    let mut mel_vector: ArrayBase<Vec<f64>, usize> =
-        ArrayBase::zeros(filter_count);
+    let mut mel_vector =
+        DVector::<f64>::zeros(filter_count);
 
     // mel_vector <- mel_filter_matrix * power_spectrum_vector
-    Gemv::gemv(
-        Transpose::NoTrans,
-        &1.,
-        &mel_filter_matrix.blas(),
-        &power_spectrum_vector.blas(),
-        &0.,
-        &mut mel_vector.blas());
+    mel_filter_matrix.mul_to(&power_spectrum_vector, &mut mel_vector);
+
+    // mel_vector now contains a mel filtered version
+    // of the power_spectrum_vector!
 }
 ```
 */
-
-extern crate ndarray;
-use ndarray::ArrayBase;
-
-#[macro_use]
-extern crate nalgebra;
-use nalgebra::ApproxEq;
 
 extern crate num;
 use num::{Float, FromPrimitive};
@@ -65,8 +50,8 @@ use num::{Float, FromPrimitive};
 extern crate hertz;
 extern crate apodize;
 
-extern crate itertools;
-use itertools::linspace;
+extern crate itertools_num;
+use itertools_num::linspace;
 
 macro_rules! f64_from_usize {
     ($val:expr) => {
@@ -92,30 +77,6 @@ pub fn mel_from_hertz(hertz: f64) -> f64 {
     2595. * (1. + hertz / 700.).log10()
 }
 
-#[test]
-fn test_mel() {
-    assert_approx_eq_eps!(
-        549.64, mel_from_hertz(440.), 0.01);
-    assert_approx_eq_eps!(
-        440., hertz_from_mel(549.64), 0.01);
-
-    let mel = 0.;
-    assert_approx_eq!(mel, mel_from_hertz(hertz_from_mel(mel)));
-    let mel = 100.;
-    assert_approx_eq_eps!(
-        mel, mel_from_hertz(hertz_from_mel(mel)), 0.0001);
-    let mel = 3000.;
-    assert_approx_eq_eps!(
-        mel, mel_from_hertz(hertz_from_mel(mel)), 0.0001);
-
-    let hertz = 0.;
-    assert_approx_eq!(hertz, hertz_from_mel(mel_from_hertz(hertz)));
-    let hertz = 1000.;
-    assert_approx_eq!(hertz, hertz_from_mel(mel_from_hertz(hertz)));
-    let hertz = 44100. / 2.;
-    assert_approx_eq!(hertz, hertz_from_mel(mel_from_hertz(hertz)));
-}
-
 /// col index changes fastest
 pub struct MelScalingMatrixEnumerator<WindowIter> {
     // parameters
@@ -137,8 +98,8 @@ pub struct MelScalingMatrixEnumerator<WindowIter> {
     row_index: usize,
     col_index: usize,
 
-    start_mels_iter: itertools::Linspace<f64>,
-    end_mels_iter: itertools::Linspace<f64>,
+    start_mels_iter: itertools_num::Linspace<f64>,
+    end_mels_iter: itertools_num::Linspace<f64>,
 
     // this gets set anew for every row
     window_start: usize,
@@ -349,31 +310,3 @@ pub fn enumerate_mel_scaling_matrix(
         apodize::triangular_iter
     )
 }
-
-#[test]
-fn test_enumerate_mel_scaling_matrix() {
-    let sample_rate = 44100;
-    let window_size = 100;
-    let power_spectrum_size = window_size / 2;
-    let filter_count = 10;
-
-    let mut data: ArrayBase<Vec<f64>, (usize, usize)> =
-        ArrayBase::zeros((filter_count, power_spectrum_size));
-
-    for (row, col, coefficient) in enumerate_mel_scaling_matrix(
-        sample_rate,
-        window_size,
-        power_spectrum_size,
-        filter_count,
-    ) {
-        data[(row, col)] = coefficient;
-    }
-    println!("{:?}", data);
-}
-
-// TODO test that identity matrix with
-// output_size = input_size
-// and conversion functions = identity
-
-// TODO test in a small scale that scaling matrixes are correct
-// then test it in emir directly and check correctness visually

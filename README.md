@@ -1,6 +1,6 @@
 # mel
 
-*status: working. needs more tests. needs better documentation. needs refactoring. api still in flux.*
+*status: working. tested. needs better documentation. needs refactoring. api still in flux.*
 
 [![Build Status](https://travis-ci.org/snd/mel.svg?branch=master)](https://travis-ci.org/snd/mel/branches)
 [![](https://meritbadge.herokuapp.com/mel)](https://crates.io/crates/mel)
